@@ -1,0 +1,121 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          zeromq-pubsub
+# Required-Start:    $network $remote_fs $local_fs 
+# Required-Stop:     $network $remote_fs $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Stop/start ZeroMQ::PubSub::Server
+### END INIT INFO
+
+NAME="zeromq-pubsub"
+USER=pubsub
+PATH=/home/eventd/perl5/bin/:/sbin:/usr/sbin:/bin:/usr/bin
+CHUSER="$USER"
+eval BASEDIR=~$USER
+COMMAND=$BASEDIR/pubsub.pl
+
+# pidfile location
+STATUSDIR=/tmp
+PIDFILE=$STATUSDIR/${NAME}.pid
+STATUSFILE=$STATUSDIR/${NAME}.status
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+# perl5 lib in homedir?
+eval PERLLOCAL=~$USER/perl5
+if [[ -d "$PERLLOCAL" ]]; then
+    export PERL_LOCAL_LIB_ROOT="$PERLLOCAL";
+    export PERL_MB_OPT="--install_base $PERLLOCAL";
+    export PERL_MM_OPT="INSTALL_BASE=$PERLLOCAL";
+    export PERL5LIB="$PERLLOCAL/lib/perl5/x86_64-linux-gnu-thread-multi:$PERLLOCAL/lib/perl5";
+    export PATH="$PERLLOCAL/bin:$PATH";
+fi
+
+# s-s-d command-line
+SSD="/sbin/start-stop-daemon --pidfile $PIDFILE --chdir $BASEDIR --startas $COMMAND -c $CHUSER -v"
+
+check_running() {
+    [ -s $PIDFILE ] && kill -0 $(cat $PIDFILE) >/dev/null 2>&1
+}
+
+_start() {
+    BACKGROUND="--background"
+    if [[ $TEST ]]; then BACKGROUND=""; fi
+    $SSD --start $BACKGROUND || return 1
+
+    log_success_msg "Backgrounded $NAME "
+    return 0
+}
+
+start() {
+    if check_running; then
+        log_failure_msg "already running"
+        exit 0
+    fi
+
+    rm -f $PIDFILE 2>/dev/null
+
+    _start
+    RET=$?
+    log_end_msg $RET
+    return $RET
+}
+
+stop() {
+    log_action_begin_msg "Stopping $NAME" $DAEMON
+
+    $SSD --stop --oknodo
+
+    RET=$?
+    log_action_end_msg $RET
+    return $RET
+}
+
+restart() {
+    if ! check_running; then
+        log_failure_msg "not running"
+        return 1
+    fi
+
+    stop
+    start
+}
+
+# need to update to return proper LSB status
+status() {
+    if check_running; then
+        log_info_msg "$NAME: running"
+        echo
+        return 0
+    else
+        log_info_msg "$NAME: not running"
+        echo
+        return 3
+    fi
+}
+
+
+############
+
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart|force-reload)
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|status|stop|restart}"
+        exit 5
+esac

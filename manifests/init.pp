@@ -25,5 +25,11 @@ class zeromq-pubsub {
       owner => 'pubsub',
       content => template('zeromq-pubsub/pubsub.pl.erb'),
       require => User['pubsub'];
+  
+    "/etc/init.d/zeromq-pubsub":
+      mode => 0755,
+      owner => 'pubsub',
+      content => template('zeromq-pubsub/init.erb'),
+      require => User['pubsub'];
   }
 }

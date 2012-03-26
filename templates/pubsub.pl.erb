@@ -6,8 +6,8 @@ use strict;
 use ZeroMQ::PubSub::Server;
 
 my $server = ZeroMQ::PubSub::Server->new(
-    publish_addrs   => [ 'ipc://local_pub' ],
-    subscribe_addrs => [ 'ipc://local_sub' ],
+    publish_addrs   => [ 'ipc:///tmp/local_pub.sock' ],
+    subscribe_addrs => [ 'ipc:///tmp/local_sub.sock' ],
 );
 
 $server->run;
