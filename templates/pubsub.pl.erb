@@ -1,0 +1,13 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use ZeroMQ::PubSub::Server;
+
+my $server = ZeroMQ::PubSub::Server->new(
+    publish_addrs   => [ 'ipc://local_pub' ],
+    subscribe_addrs => [ 'ipc://local_sub' ],
+);
+
+$server->run;
