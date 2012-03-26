@@ -35,7 +35,7 @@ if [[ -d "$PERLLOCAL" ]]; then
 fi
 
 # s-s-d command-line
-SSD="/sbin/start-stop-daemon --pidfile $PIDFILE --chdir $BASEDIR --startas $COMMAND -c $CHUSER -v"
+SSD="/sbin/start-stop-daemon --make-pidfile --pidfile $PIDFILE --chdir $BASEDIR --startas $COMMAND -c $CHUSER -v"
 
 check_running() {
     [ -s $PIDFILE ] && kill -0 $(cat $PIDFILE) >/dev/null 2>&1
@@ -46,7 +46,6 @@ _start() {
     if [[ $TEST ]]; then BACKGROUND=""; fi
     $SSD --start $BACKGROUND || return 1
 
-    log_success_msg "Backgrounded $NAME "
     return 0
 }
 
